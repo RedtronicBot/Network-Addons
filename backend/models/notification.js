@@ -7,10 +7,12 @@ const notificationSchema = mongoose.Schema({
 	type: { type: String, required: true },
 	priority: { type: String, required: true },
 	read: { type: Boolean, required: true },
-	read_at: { type: Date, required: true },
+	read_at: { type: Date, required: false },
+	created_at: { type: Date, required: true },
+	updated_at: { type: Date, required: false },
 	expires_at: { type: Date, required: true },
-	action_url: { type: String, required: true },
-	context: { type: mongoose.Schema.Types.Mixed, required: true },
+	action_url: { type: String, required: false },
+	context: { type: mongoose.Schema.Types.Mixed, required: false },
 })
 
 module.exports = mongoose.model("Notification", notificationSchema)

@@ -8,6 +8,8 @@ const app = express()
 app.options("*", cors())
 /*Récupération des routes*/
 const notificationRoutes = require("./routes/notificationRoutes")
+const notificationTypeRoutes = require("./routes/notificationTypeRoutes")
+const notificationPriorityRoutes = require("./routes/notificationPriorityRoutes")
 /*Connexion à la base de données mongodb*/
 mongoose
 	.connect(process.env.MONGO_URI)
@@ -20,4 +22,6 @@ app.use(express.json())
 app.use(express.static(__dirname))
 /*Utilisation des routes*/
 app.use("/notification", notificationRoutes)
+app.use("/notificationtype", notificationTypeRoutes)
+app.use("/notificationpriority", notificationPriorityRoutes)
 module.exports = app

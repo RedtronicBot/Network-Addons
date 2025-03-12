@@ -8,8 +8,8 @@ exports.getAllNotification = (req, res, next) => {
 
 exports.postNotification = (req, res, next) => {
 	Notification.create(req.body)
-		.then(() => {
-			res.status(201).json({ message: "Notification crée" })
+		.then((notification) => {
+			res.status(201).json({ data: notification })
 		})
 		.catch((error) => res.status(400).json({ error }))
 }

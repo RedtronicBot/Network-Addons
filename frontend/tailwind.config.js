@@ -7,9 +7,10 @@ export default {
 				primary: "#27292D",
 				secondary: "#353638",
 				tertiary: "#434446",
-				menu: "#222222",
-			},
-		},
+				tertiaryClick: "#545557",
+				menu: "#222222"
+			}
+		}
 	},
-	plugins: [],
+	plugins: []
 }

@@ -10,6 +10,10 @@ function App() {
 	const [priorityNotifUser, setPriorityNotifUser] = useState("")
 	const titleRef = useRef(null)
 	const contentRef = useRef(null)
+	const [titleError, setTitleError] = useState(false)
+	const [contentError, setContentError] = useState(false)
+	const [typeError, setTypeError] = useState(false)
+	const [priorityError, setPriorityError] = useState(false)
 	/*Récupération des notifications dans la bdd au montage*/
 	useEffect(() => {
 		axios
@@ -26,13 +30,28 @@ function App() {
 			.catch((err) => console.error(err))
 	}, [])
 	function createNotif() {
+		setTitleError(false)
+		setTypeError(false)
+		setPriorityError(false)
+		setContentError(false)
 		if (
 			titleRef.current.value === "" ||
 			typeNotifUser === "" ||
 			priorityNotifUser === "" ||
 			contentRef.current.value === ""
 		) {
-			console.log("erreur")
+			if (titleRef.current.value === "") {
+				setTitleError(true)
+			}
+			if (typeNotifUser === "") {
+				setTypeError(true)
+			}
+			if (priorityNotifUser === "") {
+				setPriorityError(true)
+			}
+			if (contentRef.current.value === "") {
+				setContentError(true)
+			}
 		} else {
 			const today = new Date()
 			const expirationDate = new Date()
@@ -51,7 +70,39 @@ function App() {
 					setNotification((prevNotifications) => [res.data.data, ...prevNotifications])
 				)
 				.catch((err) => console.error(err))
+			setOpenNotifMenu(false)
 		}
+	}
+	/*Modification de l'état "Read" de la notification*/
+	function modifyReadNotification(notif) {
+		const today = new Date()
+		if (notif.read === false) {
+			axios
+				.put("http://localhost:3001/notification", {
+					id: notif._id,
+					date: today
+				})
+				.then((res) =>
+					setNotification((prevNotifications) =>
+						prevNotifications.map((notifs) =>
+							notifs._id === notif._id ? res.data.data : notifs
+						)
+					)
+				)
+				.catch((err) => console.error(err))
+		}
+	}
+	/*Modification de toute les notification en lue*/
+	function updateAllNotification() {
+		const today = new Date()
+		axios
+			.put("http://localhost:3001/notification/all")
+			.then((res) =>
+				setNotification((prevNotifications) =>
+					prevNotifications.map((notif) => ({ ...notif, read: true, date: today }))
+				)
+			)
+			.catch((err) => console.error(err))
 	}
 	/*Fermeture du menu de notif au clic extérieur au menu*/
 	useEffect(() => {
@@ -99,21 +150,34 @@ function App() {
 				ref={notifRef}
 			>
 				<div className="flex w-[650px] max-w-[95%] cursor-default flex-col items-center gap-[10px] rounded-lg bg-secondary py-[20px]">
-					<input
-						type="text"
-						placeholder="Title"
-						className="h-10 w-[70%] rounded-sm bg-gray-500 pl-2 text-xl text-gray-100"
-						ref={titleRef}
-					/>
+					<div className="flex w-[70%] flex-col">
+						<p className={`${titleError ? "flex" : "hidden"} text-red-600`}>
+							title needed
+						</p>
+						<input
+							type="text"
+							placeholder="Title"
+							className="h-10 w-full rounded-sm bg-gray-500 pl-2 text-xl text-gray-100"
+							ref={titleRef}
+						/>
+					</div>
 					<div className="flex w-[72%]">
 						<p className="text-xl text-white">Content</p>
 					</div>
-					<textarea
-						className="h-[70px] w-[70%] rounded-sm bg-gray-500 pl-2 text-xl text-gray-100"
-						ref={contentRef}
-					></textarea>
-					<div className="mt-[10px] flex w-[72%]">
+					<div className="flex w-[70%] flex-col">
+						<p className={`${contentError ? "flex" : "hidden"} text-red-600`}>
+							content needed
+						</p>
+						<textarea
+							className="h-[70px] w-full rounded-sm bg-gray-500 pl-2 text-xl text-gray-100"
+							ref={contentRef}
+						></textarea>
+					</div>
+					<div className="mt-[10px] flex w-[72%] flex-col">
 						<p className="text-xl text-white">Notification Type</p>
+						<p className={`${typeError ? "flex" : "hidden"} text-red-600`}>
+							choose a type
+						</p>
 					</div>
 					<div className="flex w-[70%] flex-wrap justify-center gap-[10px]">
 						{typeNotif.length > 0 &&
@@ -131,8 +195,11 @@ function App() {
 								</div>
 							))}
 					</div>
-					<div className="mt-[10px] flex w-[72%]">
+					<div className="mt-[10px] flex w-[72%] flex-col">
 						<p className="text-xl text-white">Notification Priority</p>
+						<p className={`${priorityError ? "flex" : "hidden"} text-red-600`}>
+							choose a priority
+						</p>
 					</div>
 					<div className="flex w-[70%] flex-wrap justify-center gap-[10px]">
 						{priorityNotif.length > 0 &&
@@ -156,7 +223,12 @@ function App() {
 			<div className="mt-[50px] w-[650px] max-w-[95%] rounded-md border-2 border-gray-300/50">
 				<div className="flex w-full justify-between border-b-2 border-gray-500/50 px-[10px]">
 					<p className="text-2xl text-white">Notifications</p>
-					<p className="text-xl text-blue-600">Mark all as read</p>
+					<p
+						className="cursor-pointer text-xl text-blue-600"
+						onClick={() => updateAllNotification()}
+					>
+						Mark all as read
+					</p>
 				</div>
 				<div>
 					{notification
@@ -164,7 +236,8 @@ function App() {
 						.map((notifs, index) => (
 							<div
 								key={index}
-								className="flex flex-col gap-[10px] border-b-2 border-gray-500/50 bg-secondary px-[10px] py-[20px]"
+								className={`flex flex-col gap-[10px] border-b-2 border-gray-500/50 ${notifs.read ? "bg-transparent" : "bg-secondary"} px-[10px] py-[20px]`}
+								onClick={() => modifyReadNotification(notifs)}
 							>
 								<div className="flex justify-between">
 									<p className="text-white">{notifs.title}</p>

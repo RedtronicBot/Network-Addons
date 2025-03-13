@@ -12,7 +12,10 @@ const notificationSchema = mongoose.Schema({
 	updated_at: { type: Date, required: false },
 	expires_at: { type: Date, required: true },
 	action_url: { type: String, required: false },
-	context: { type: mongoose.Schema.Types.Mixed, required: false },
+	metadata: { type: mongoose.Schema.Types.Mixed, required: false },
+	recipient_id: { type: Number, required: true },
+	sender_id: { type: Number, required: false },
+	relation_id: { type: Number, required: false },
 })
-
+notificationSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 })
 module.exports = mongoose.model("Notification", notificationSchema)

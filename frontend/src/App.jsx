@@ -1,5 +1,7 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react"
+import bell from "./assets/bell-regular.svg"
+import close_logo from "./assets/x-solid.svg"
 function App() {
 	const [notification, setNotification] = useState([])
 	const [openNotifMenu, setOpenNotifMenu] = useState(false)
@@ -14,6 +16,7 @@ function App() {
 	const [contentError, setContentError] = useState(false)
 	const [typeError, setTypeError] = useState(false)
 	const [priorityError, setPriorityError] = useState(false)
+	const [countNotifUnread, setCountNotifUnread] = useState(0)
 	/*Récupération des notifications dans la bdd au montage*/
 	useEffect(() => {
 		axios
@@ -29,6 +32,10 @@ function App() {
 			.then((res) => setPriorityNotif(res.data))
 			.catch((err) => console.error(err))
 	}, [])
+	/*Comptage du nombre de notif non lu*/
+	useEffect(() => {
+		setCountNotifUnread(notification.filter((notif) => !notif.read).length)
+	}, [notification])
 	function createNotif() {
 		setTitleError(false)
 		setTypeError(false)
@@ -64,7 +71,8 @@ function App() {
 					priority: priorityNotifUser,
 					read: false,
 					created_at: today,
-					expires_at: expirationDate
+					expires_at: expirationDate,
+					recipient_id: 1
 				})
 				.then((res) =>
 					setNotification((prevNotifications) => [res.data.data, ...prevNotifications])
@@ -131,6 +139,18 @@ function App() {
 		if (diffDays < 30) return `il y a ${diffDays} j`
 		if (diffMonth < 12) return `il y a ${diffMonth} mois`
 	}
+	/*Remise à zéro des champs et des erreurs à l'ouverture du menu*/
+	function onNotifMenu() {
+		setOpenNotifMenu(!openNotifMenu)
+		setTitleError(false)
+		setTypeError(false)
+		setPriorityError(false)
+		setContentError(false)
+		titleRef.current.value = ""
+		contentRef.current.value = ""
+		setTypeNotifUser("")
+		setPriorityNotifUser("")
+	}
 	return (
 		<div className="flex min-h-screen flex-col items-center bg-primary">
 			<div className="flex w-full items-center gap-[50px] p-[10px]">
@@ -141,7 +161,7 @@ function App() {
 			</div>
 			<div
 				className="mt-[50px] cursor-pointer select-none rounded-md bg-secondary px-[10px] py-[5px]"
-				onClick={() => setOpenNotifMenu(!openNotifMenu)}
+				onClick={() => onNotifMenu()}
 			>
 				<p className="text-xl text-white">Create a notification</p>
 			</div>
@@ -149,7 +169,16 @@ function App() {
 				className={`${openNotifMenu ? "flex" : "hidden"} absolute min-h-screen w-full cursor-pointer items-center justify-center bg-black/40`}
 				ref={notifRef}
 			>
-				<div className="flex w-[650px] max-w-[95%] cursor-default flex-col items-center gap-[10px] rounded-lg bg-secondary py-[20px]">
+				<div className="relative z-10 flex w-[650px] max-w-[95%] cursor-default flex-col items-center gap-[10px] rounded-lg bg-secondary py-[20px]">
+					<img
+						src={close_logo}
+						alt=""
+						className="absolute right-[10px] top-[10px] h-[20px] cursor-pointer"
+						onClick={() => setOpenNotifMenu(!openNotifMenu)}
+						style={{
+							filter: "invert(100%) sepia(100%) saturate(1%) hue-rotate(313deg) brightness(110%) contrast(101%)"
+						}}
+					/>
 					<div className="flex w-[70%] flex-col">
 						<p className={`${titleError ? "flex" : "hidden"} text-red-600`}>
 							title needed
@@ -222,7 +251,22 @@ function App() {
 			</div>
 			<div className="mt-[50px] w-[650px] max-w-[95%] rounded-md border-2 border-gray-300/50">
 				<div className="flex w-full justify-between border-b-2 border-gray-500/50 px-[10px]">
-					<p className="text-2xl text-white">Notifications</p>
+					<div className="relative flex items-center justify-center gap-[10px]">
+						<img
+							src={bell}
+							alt=""
+							className="h-[20px]"
+							style={{
+								filter: "invert(100%) sepia(100%) saturate(1%) hue-rotate(313deg) brightness(110%) contrast(101%)"
+							}}
+						/>
+						{countNotifUnread !== 0 && (
+							<p className="absolute left-[7px] top-[2px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-red-600 text-xs text-white">
+								{countNotifUnread}
+							</p>
+						)}
+						<p className="text-2xl text-white">Notifications</p>
+					</div>
 					<p
 						className="cursor-pointer text-xl text-blue-600"
 						onClick={() => updateAllNotification()}
